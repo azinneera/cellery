@@ -15,8 +15,7 @@
     "pet-store",
     "cellery"
   ],
-  "author": "asmaj@wso2.com",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/wso2-cellery/sdk/issues"
   },
