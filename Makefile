@@ -23,7 +23,7 @@ BALLERINA_VERSION := 0.990.3
 BALLERINA_JRE_LOCATION := ballerina-$(BALLERINA_VERSION)/bre/lib
 BALLERINA_BIN_LOCATION := ballerina-$(BALLERINA_VERSION)/bin
 
-OBSERVABILITY_LAST_BUILD := https://wso2.org/jenkins/job/cellery/job/mesh-observability/lastSuccessfulBuild
+OBSERVABILITY_LAST_BUILD := https://wso2.org/jenkins/job/cellery/job/mesh-observability-test/lastSuccessfulBuild
 OBSERVABILITY_ARTIFACTS_PATH := $(OBSERVABILITY_LAST_BUILD)/artifact/components/global/*zip*
 OBSERVABILITY_ARTIFACTS := global.zip
 
