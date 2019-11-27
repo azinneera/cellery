@@ -170,6 +170,11 @@ func RunTest(cli cli.Cli, cellImageTag string, instanceName string, startDepende
 	err = startTestCellInstance(cli, imageDir, instanceName, mainNode, instanceEnvVars, startDependencies,
 		shareDependencies, rootNodeDependencies, verbose, debug, disableTelepresence, incell, assumeYes, projLocation)
 	if err != nil {
+		//Cleanup telepresence deployment started for tests
+		k8sErr := kubernetes.DeleteFile(filepath.Join(imageDir, "telepresence.yaml"))
+		if k8sErr != nil {
+			util.PrintWarningMessage(fmt.Sprintf("Failed to clean telepresence resources in Kubsernetes cluster, %v ", err))
+		}
 		return fmt.Errorf("failed to test Cell instance "+instanceName+", %v", err)
 	}
 
@@ -436,7 +441,9 @@ func startTestCellInstance(cli cli.Cli, imageDir string, instanceName string, ru
 		}
 	}
 
-	err = CreateBallerinaConf(string(iName), verboseMode, imageDir, string(dependencyLinksJson), envVars, testsRoot)
+	//Create ballerina.conf to pass CLI flags to the Ballerina process
+	err = CreateBallerinaConf(string(iName), string(dependencyLinksJson), startDependencies, shareDependencies,
+		verboseMode, imageDir, envVars, testsRoot)
 	if err != nil {
 		return err
 	}
@@ -487,17 +494,20 @@ func PromtConfirmation(balProj string, debug bool) (bool, error) {
 	return true, nil
 }
 
-func CreateBallerinaConf(iName string, verboseMode string, imageDir string, dependencyLinks string,
-	envVars []*environmentVariable, balProj string) error {
+func CreateBallerinaConf(iName string, dependencyLinks string, startDependencies bool, shareDependencies bool,
+	verboseMode string, imageDir string, envVars []*environmentVariable, balProj string) error {
 
 	content := []string{fmt.Sprintf(CelleryTestVerboseMode+"=\"%s\"\n", verboseMode)}
 	content = append(content, fmt.Sprintf(constants.CelleryImageDirEnvVar+"=\"%s\"\n", imageDir))
 	for _, envVar := range envVars {
 		content = append(content, fmt.Sprintf(envVar.Key+"=\"%s\"\n", envVar.Value))
 	}
+	content = append(content, "[test.config]\n")
 	content = append(content, fmt.Sprintf("IMAGE_NAME=\"%s\"\n", strings.Replace(iName, "\"", "\\\"", -1)))
 	content = append(content, fmt.Sprintf("DEPENDENCY_LINKS=\"%s\"\n",
 		strings.Replace(dependencyLinks, "\"", "\\\"", -1)))
+	content = append(content, fmt.Sprintf("START_DEPENDENCIES=%s\n", strconv.FormatBool(startDependencies)))
+	content = append(content, fmt.Sprintf("SHARE_DEPENDENCIES=%s\n", strconv.FormatBool(shareDependencies)))
 
 	ballerinaConfPath := filepath.Join(balProj, constants.BallerinaConf)
 
